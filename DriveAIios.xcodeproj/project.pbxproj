@@ -29,9 +29,22 @@
 		9CC1E4282D96F92C002D0597 /* DriveAIiosUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DriveAIiosUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		9CC1E4C62D9700C3002D0597 /* Exceptions for "DriveAIios" folder in "DriveAIios" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 9CC1E40D2D96F92C002D0597 /* DriveAIios */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9CC1E4102D96F92C002D0597 /* DriveAIios */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				9CC1E4C62D9700C3002D0597 /* Exceptions for "DriveAIios" folder in "DriveAIios" target */,
+			);
 			path = DriveAIios;
 			sourceTree = "<group>";
 		};
@@ -396,8 +409,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"DriveAIios/Preview Content\"";
+				DEVELOPMENT_TEAM = BF9Z3WACSH;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DriveAIios/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -424,8 +439,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"DriveAIios/Preview Content\"";
+				DEVELOPMENT_TEAM = BF9Z3WACSH;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DriveAIios/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
