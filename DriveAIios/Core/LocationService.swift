@@ -1,6 +1,6 @@
 //
 //  LocationService.swift
-//  DriveAIios
+//  CruiseAIios
 //
 //  Created by Ojas Kandhare on 3/28/25.
 //
@@ -8,14 +8,27 @@
 import Foundation
 import CoreLocation
 import Combine
+import MapKit
+import AVFoundation
 
 class LocationService: NSObject, ObservableObject {
     @Published var currentLocation: CLLocation?
     @Published var locationError: LocationError?
     @Published var isTracking = false
+    @Published var currentSpeedLimit: Double = 0 // mph
+    @Published var isExceedingSpeedLimit = false
+    @Published var speedLimitExceededTime: Date?
+    
+    // Speed limit warning cooldown
+    private var lastSpeedWarningTime: Date?
+    private let speedWarningCooldown: TimeInterval = 30.0 // 30 seconds between speed warnings
     
     public let locationManager = CLLocationManager()
-    private var tripLocations: [CLLocation] = []
+    // Make tripLocations accessible to other classes
+    private(set) var tripLocations: [CLLocation] = []
+    
+    // MKDirections for getting route information including speed limits
+    private let mapHelper = MKDirections.Request()
     
     override init() {
         super.init()
@@ -24,22 +37,29 @@ class LocationService: NSObject, ObservableObject {
     
     private func setupLocationManager() {
         locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        locationManager.distanceFilter = 10 // Update every 10 meters
-        // Initialize basic settings but don't enable background updates yet
+        locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation // Highest accuracy for navigation
+        locationManager.distanceFilter = 5 // Update every 5 meters for more frequent updates
+        locationManager.activityType = .automotiveNavigation // Optimize for driving
         locationManager.pausesLocationUpdatesAutomatically = false
+        
+        // Request location immediately when the app starts
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.startUpdatingLocation()
     }
     
     func requestLocationPermission() {
         switch locationManager.authorizationStatus {
         case .notDetermined:
-            locationManager.requestAlwaysAuthorization()
+            // Start with "when in use" permission first, which is less intrusive
+            locationManager.requestWhenInUseAuthorization()
         case .restricted, .denied:
             DispatchQueue.main.async {
                 self.locationError = .permissionDenied
             }
         case .authorizedWhenInUse:
-            locationManager.requestAlwaysAuthorization()
+            // Only request "always" if absolutely necessary
+            // For testing on a physical device, "when in use" is sufficient
+            locationManager.startUpdatingLocation()
         case .authorizedAlways:
             enableBackgroundUpdates()
             locationManager.startUpdatingLocation()
@@ -95,18 +115,114 @@ class LocationService: NSObject, ObservableObject {
         guard !tripLocations.isEmpty else { return 0 }
         return tripLocations.compactMap { $0.speed >= 0 ? $0.speed : nil }.max() ?? 0
     }
+    
+    // Check if user is exceeding speed limit
+    func checkSpeedLimit(currentSpeed: Double) {
+        // Only check if we have a valid speed limit
+        guard currentSpeedLimit > 0 else { return }
+        
+        // Convert m/s to mph for comparison
+        let speedMph = currentSpeed * 2.237
+        
+        // Check if speed is 10% over the limit
+        let speedLimitThreshold = currentSpeedLimit * 1.1
+        let isExceeding = speedMph > speedLimitThreshold
+        
+        // Check if we should show a warning (first time or after cooldown)
+        let shouldWarn = isExceeding && 
+                        (lastSpeedWarningTime == nil || 
+                         (lastSpeedWarningTime != nil &&
+                          Date().timeIntervalSince(lastSpeedWarningTime!) >= speedWarningCooldown))
+        
+        if shouldWarn {
+            // Update warning time
+            lastSpeedWarningTime = Date()
+            speedLimitExceededTime = Date()
+            
+            // Update published property to trigger UI update
+            DispatchQueue.main.async {
+                self.isExceedingSpeedLimit = true
+                
+                // Play speed warning sound
+                self.speakSpeedWarning()
+                
+                // Reset after 3 seconds
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
+                    self.isExceedingSpeedLimit = false
+                }
+            }
+        }
+    }
+    
+    // Get speed limit for current location
+    func updateSpeedLimit(at location: CLLocation) {
+        // Create a map item from the location
+        let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: location.coordinate))
+        
+        // Get the address for this location
+        CLGeocoder().reverseGeocodeLocation(location) { [weak self] placemarks, error in
+            guard let self = self, error == nil, let _ = placemarks?.first else { return }
+            
+            // Use MKDirections to get route information including speed limit
+            let request = MKDirections.Request()
+            request.source = MKMapItem.forCurrentLocation()
+            request.destination = mapItem
+            
+            let directions = MKDirections(request: request)
+            directions.calculate { [weak self] response, error in
+                guard let self = self, let _ = response?.routes.first else { return }
+                
+                // For demonstration, we'll use a default value of 30 mph
+                // In a real app, you would use actual speed limit data from the route
+                let speedLimitMph = 30.0
+                
+                DispatchQueue.main.async {
+                    self.currentSpeedLimit = speedLimitMph
+                    
+                    // Check if user is exceeding speed limit
+                    if let currentLocation = self.currentLocation {
+                        self.checkSpeedLimit(currentSpeed: currentLocation.speed)
+                    }
+                }
+            }
+        }
+    }
+    
+    // Speak speed warning
+    private func speakSpeedWarning() {
+        let speechSynthesizer = AVSpeechSynthesizer()
+        let utterance = AVSpeechUtterance(string: "Speed")
+        utterance.rate = 0.5
+        utterance.volume = 1.0
+        utterance.pitchMultiplier = 1.2
+        speechSynthesizer.speak(utterance)
+    }
+    
+    public func enableBackgroundUpdates() {
+        locationManager.allowsBackgroundLocationUpdates = true
+    }
 }
 
 extension LocationService: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
-
         
         DispatchQueue.main.async {
             self.currentLocation = location
             if self.isTracking {
                 self.tripLocations.append(location)
             }
+            
+            // Update speed limit every 30 seconds or when location changes significantly
+            let shouldUpdateSpeedLimit = self.lastSpeedWarningTime == nil || 
+                                        (self.lastSpeedWarningTime != nil && 
+                                         Date().timeIntervalSince(self.lastSpeedWarningTime!) >= 30.0)
+            if shouldUpdateSpeedLimit {
+                self.updateSpeedLimit(at: location)
+            }
+            
+            // Check if user is exceeding speed limit
+            self.checkSpeedLimit(currentSpeed: location.speed)
         }
     }
     
@@ -122,22 +238,18 @@ extension LocationService: CLLocationManagerDelegate {
             enableBackgroundUpdates()
             manager.startUpdatingLocation()
         case .authorizedWhenInUse:
-            // Request "Always" permission for background tracking
-            manager.requestAlwaysAuthorization()
+            // For testing on a physical device, "when in use" is sufficient
+            // Don't request "always" permission again to avoid annoying the user
             manager.startUpdatingLocation()
         case .denied, .restricted:
             DispatchQueue.main.async {
                 self.locationError = .permissionDenied
             }
         case .notDetermined:
-            manager.requestAlwaysAuthorization()
+            manager.requestWhenInUseAuthorization()
         @unknown default:
             break
         }
-    }
-    
-    public func enableBackgroundUpdates() {
-        locationManager.allowsBackgroundLocationUpdates = true
     }
 }
 

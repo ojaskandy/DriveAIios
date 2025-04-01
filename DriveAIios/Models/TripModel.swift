@@ -18,6 +18,14 @@ struct Trip: Identifiable, Codable {
     let route: [LocationPoint]
     let safetyScore: Int
     let incidents: [Incident]
+    let dashcamFootagePath: String?
+    let hasCrashDetected: Bool
+    let crashTimestamp: Date?
+    let crashFootagePath: String?
+    
+    var date: Date {
+        startTime
+    }
     
     init(id: UUID = UUID(),
          startTime: Date,
@@ -27,7 +35,11 @@ struct Trip: Identifiable, Codable {
          maxSpeed: Double,
          route: [LocationPoint],
          safetyScore: Int,
-         incidents: [Incident]) {
+         incidents: [Incident],
+         dashcamFootagePath: String? = nil,
+         hasCrashDetected: Bool = false,
+         crashTimestamp: Date? = nil,
+         crashFootagePath: String? = nil) {
         self.id = id
         self.startTime = startTime
         self.endTime = endTime
@@ -37,6 +49,10 @@ struct Trip: Identifiable, Codable {
         self.route = route
         self.safetyScore = safetyScore
         self.incidents = incidents
+        self.dashcamFootagePath = dashcamFootagePath
+        self.hasCrashDetected = hasCrashDetected
+        self.crashTimestamp = crashTimestamp
+        self.crashFootagePath = crashFootagePath
     }
 }
 
@@ -78,8 +94,9 @@ enum IncidentType: String, Codable {
     case speedingViolation
     case suddenBraking
     case suddenAcceleration
-    case laneDeparture
+    case trafficLightDetection
     case trafficViolation
+    case crash
 }
 
 struct TripSummary: Codable {

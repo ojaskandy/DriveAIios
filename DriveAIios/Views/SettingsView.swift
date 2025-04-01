@@ -1,6 +1,6 @@
 //
 //  SettingsView.swift
-//  DriveAIios
+//  CruiseAIios
 //
 //  Created by Ojas Kandhare on 3/28/25.
 //
@@ -12,10 +12,77 @@ import AVFoundation
 struct SettingsView: View {
     @ObservedObject var locationService: LocationService
     @ObservedObject var cameraService: CameraService
+    @StateObject private var userPreferences = UserPreferencesService.shared
+    
+    @State private var showingColorPicker = false
+    @State private var customColor = Color.blue
+    @State private var hexColor: String = "#0000FF"
     
     var body: some View {
         NavigationView {
             List {
+                Section(header: Text("Appearance")) {
+                    Toggle(isOn: $userPreferences.isDarkMode) {
+                        Label("Dark Mode", systemImage: "moon.fill")
+                    }
+                    .onChange(of: userPreferences.isDarkMode) { newValue in
+                        userPreferences.setDarkMode(newValue)
+                    }
+                    
+                    Button(action: {
+                        showingColorPicker = true
+                    }) {
+                        HStack {
+                            Label("Background Color", systemImage: "paintpalette.fill")
+                            Spacer()
+                            if let colorHex = userPreferences.customBackgroundColor {
+                                Circle()
+                                    .fill(Color(hex: colorHex) ?? .blue)
+                                    .frame(width: 24, height: 24)
+                            } else {
+                                Text("Default")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    .sheet(isPresented: $showingColorPicker) {
+                        ColorPickerView(
+                            selectedColor: $customColor,
+                            hexColor: $hexColor,
+                            onSave: { color, hex in
+                                userPreferences.setCustomBackgroundColor(hex)
+                                showingColorPicker = false
+                            },
+                            onCancel: {
+                                showingColorPicker = false
+                            }
+                        )
+                    }
+                }
+                
+                Section(header: Text("Safety Features")) {
+                    Toggle(isOn: $userPreferences.isDashcamEnabled) {
+                        Label("Dashcam", systemImage: "video.fill")
+                    }
+                    .onChange(of: userPreferences.isDashcamEnabled) { newValue in
+                        userPreferences.setDashcamEnabled(newValue)
+                    }
+                    
+                    Toggle(isOn: $userPreferences.isCrashDetectionEnabled) {
+                        Label("Crash Detection", systemImage: "exclamationmark.triangle.fill")
+                    }
+                    .onChange(of: userPreferences.isCrashDetectionEnabled) { newValue in
+                        userPreferences.setCrashDetectionEnabled(newValue)
+                    }
+                    
+                    Toggle(isOn: $userPreferences.isSafetyModeEnabled) {
+                        Label("Safety Mode", systemImage: "shield.fill")
+                    }
+                    .onChange(of: userPreferences.isSafetyModeEnabled) { newValue in
+                        userPreferences.setSafetyModeEnabled(newValue)
+                    }
+                }
+                
                 Section(header: Text("Permissions")) {
                     HStack {
                         Label("Location", systemImage: "location.fill")
@@ -45,8 +112,8 @@ struct SettingsView: View {
                         Label("Privacy Policy", systemImage: "hand.raised.fill")
                     }
                     
-                    NavigationLink(destination: HelpView()) {
-                        Label("Help & Support", systemImage: "questionmark.circle.fill")
+                    NavigationLink(destination: ContactSupportView()) {
+                        Label("Contact Support", systemImage: "questionmark.circle.fill")
                     }
                     
                     HStack {
@@ -59,6 +126,7 @@ struct SettingsView: View {
             }
             .navigationTitle("Settings")
             .listStyle(InsetGroupedListStyle())
+            .withHelpButton()
         }
     }
     
@@ -129,7 +197,7 @@ struct PrivacyPolicyView: View {
                     .font(.title)
                     .fontWeight(.bold)
                 
-                Text("DriveAI is committed to protecting your privacy. This policy explains how we collect, use, and safeguard your data.")
+                Text("CruiseAI is committed to protecting your privacy. This policy explains how we collect, use, and safeguard your data.")
                 
                 Group {
                     privacySection(
@@ -152,6 +220,7 @@ struct PrivacyPolicyView: View {
         }
         .navigationTitle("Privacy Policy")
         .navigationBarTitleDisplayMode(.inline)
+        .withHelpButton()
     }
     
     private func privacySection(title: String, content: String) -> some View {
@@ -168,17 +237,17 @@ struct HelpView: View {
     var body: some View {
         List {
             Section(header: Text("Getting Started")) {
-                NavigationLink("How to Use DriveAI") {
+                NavigationLink("How to Use CruiseAI") {
                     helpContent(
-                        title: "How to Use DriveAI",
-                        content: "1. Enable location and camera permissions\n2. Start a new trip by tapping the record button\n3. Mount your device securely on your dashboard\n4. DriveAI will monitor your driving and provide alerts"
+                        title: "How to Use CruiseAI",
+                        content: "1. Enable location and camera permissions\n2. Start a new trip by tapping the record button\n3. Mount your device securely on your dashboard\n4. CruiseAI will monitor your driving and provide alerts"
                     )
                 }
                 
                 NavigationLink("Safety Features") {
                     helpContent(
                         title: "Safety Features",
-                        content: "• Real-time hazard detection\n• Speed monitoring\n• Lane departure warnings\n• Distance maintenance alerts\n• Traffic rule violation prevention"
+                        content: "• Real-time hazard detection\n• Speed monitoring\n• Traffic light detection\n• Distance maintenance alerts\n• Traffic rule violation prevention"
                     )
                 }
             }
@@ -194,7 +263,7 @@ struct HelpView: View {
                 NavigationLink("Contact Support") {
                     helpContent(
                         title: "Contact Support",
-                        content: "Email: support@driveai.com\nPhone: 1-800-DRIVEAI\n\nOur support team is available Monday through Friday, 9 AM to 5 PM EST."
+                        content: "Email: ojaskandy@gmail.com\n\nPlease contact us for any questions, feedback, or support issues."
                     )
                 }
             }

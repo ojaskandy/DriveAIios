@@ -1,0 +1,2 @@
+This is a placeholder for the person detection sound file.
+In a real implementation, this would be a .wav or .mp3 file with a short (0.6s) orchestral melody featuring a warm cello playing a gentle two-note phrase (E-A) with a soft woodwind (clarinet) accompaniment, creating a human and organic feeling.

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Charts
+import MessageUI
 
 struct AnalyticsView: View {
     @ObservedObject var tripDataService: TripDataService
@@ -22,6 +23,7 @@ struct AnalyticsView: View {
                 .padding()
             }
             .navigationTitle("Analytics")
+            .withHelpButton()
         }
     }
     
@@ -36,29 +38,32 @@ struct AnalyticsView: View {
                 GridItem(.flexible())
             ], spacing: 16) {
                 StatBox(
-                    title: "Total Distance",
-                    value: String(format: "%.1f mi", tripDataService.getTotalDistance() / 1609.34),
-                    icon: "map.fill"
+                    icon: "map",
+                    value: String(format: "%.1f", tripDataService.getTotalDistance() / 1609.34),
+                    unit: "mi",
+                    title: "Total Distance"
                 )
                 
                 StatBox(
-                    title: "Avg Safety Score",
-                    value: "\(tripDataService.getAverageSafetyScore())",
-                    icon: "shield.fill"
+                    icon: "speedometer",
+                    value: String(format: "%.1f", tripDataService.getAverageSpeedForLastNTrips(tripDataService.trips.count) * 2.237),
+                    unit: "mph",
+                    title: "Average Speed"
                 )
                 
                 StatBox(
-                    title: "Recent Avg Speed",
-                    value: String(format: "%.1f mph",
-                                tripDataService.getAverageSpeedForLastNTrips(5) * 2.237),
-                    icon: "speedometer"
+                    icon: "exclamationmark.triangle",
+                    value: String(format: "%d", tripDataService.getTotalIncidents()),
+                    unit: "",
+                    title: "Total Incidents"
                 )
                 
                 if let commonIncident = tripDataService.getMostCommonIncidentType() {
                     StatBox(
-                        title: "Common Incident",
+                        icon: "exclamationmark.triangle.fill",
                         value: commonIncident.rawValue.capitalized,
-                        icon: "exclamationmark.triangle.fill"
+                        unit: "",
+                        title: "Common Incident"
                     )
                 }
             }
@@ -141,35 +146,9 @@ struct AnalyticsView: View {
         case .speedingViolation: return .red
         case .suddenBraking: return .orange
         case .suddenAcceleration: return .yellow
-        case .laneDeparture: return .blue
+        case .trafficLightDetection: return .blue
         case .trafficViolation: return .purple
+        case .crash: return .red
         }
-    }
-}
-
-struct StatBox: View {
-    let title: String
-    let value: String
-    let icon: String
-    
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon)
-                .font(.title)
-                .foregroundColor(.blue)
-            
-            Text(value)
-                .font(.headline)
-                .multilineTextAlignment(.center)
-            
-            Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(Color(.secondarySystemBackground))
-        .cornerRadius(8)
     }
 }

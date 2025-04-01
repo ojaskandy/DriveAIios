@@ -1,0 +1,2 @@
+This is a placeholder for the traffic light sound file.
+In a real implementation, this would be a .wav or .mp3 file with a short (0.8s) orchestral melody featuring a bright string section with ascending notes (G-A-C-E) that creates an uplifting, attention-grabbing sound without being jarring.
