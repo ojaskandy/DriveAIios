@@ -16,11 +16,12 @@ struct LiveMonitoringView: View {
     @ObservedObject var locationService: LocationService
     @ObservedObject var cameraService: CameraService
     @ObservedObject var tripDataService: TripDataService
-    @StateObject private var distanceEstimationService = DistanceEstimationService()
     @Binding var selectedTab: Int
     
     @State private var isRecording = false
     @State private var isAnimating = false
+    // For haptic feedback rate limiting
+    @State private var lastProcessingTime = Date()
     // Default to a reasonable location but will be updated with user's actual location
     @State private var region = MKCoordinateRegion(
         center: CLLocationCoordinate2D(latitude: 0, longitude: 0),
@@ -63,34 +64,34 @@ struct LiveMonitoringView: View {
                         .transition(.scale.combined(with: .opacity))
                 }
                 
-                // Collision warning overlay
-                if distanceEstimationService.collisionWarning == .imminent {
-                    ZStack {
-                        // Flashing background
-                        Rectangle()
-                            .fill(Color.red.opacity(0.5))
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .edgesIgnoringSafeArea(.all)
-                            .opacity(isAnimating ? 0.7 : 0.3)
-                            .animation(Animation.easeInOut(duration: 0.2).repeatForever(autoreverses: true), value: isAnimating)
+                // Collision warning overlay removed (no distance estimation)
+                
+                // Map widget with "Coming Soon" badge
+                VStack {
+                    Spacer()
+                    
+                    ZStack(alignment: .topTrailing) {
+                        // Map placeholder
+                        RoundedRectangle(cornerRadius: 15)
+                            .fill(Color.gray.opacity(0.2))
+                            .frame(height: 150)
+                            .overlay(
+                                Text("Map View")
+                                    .foregroundColor(.secondary)
+                            )
+                            .padding(.horizontal)
+                            .padding(.bottom, 80) // Space for control panel
                         
-                        // BRAKE text
-                        Text("BRAKE")
-                            .font(.system(size: 80, weight: .heavy))
+                        // Coming Soon badge
+                        Text("COMING SOON")
+                            .font(.system(size: 10, weight: .bold))
                             .foregroundColor(.white)
-                            .shadow(color: .black, radius: 2, x: 2, y: 2)
-                            .scaleEffect(isAnimating ? 1.1 : 1.0)
-                            .animation(Animation.easeInOut(duration: 0.2).repeatForever(autoreverses: true), value: isAnimating)
-                    }
-                    .transition(.opacity)
-                    .onAppear {
-                        // Start animation
-                        isAnimating = true
-                        // Play brake warning sound
-                        playBrakeWarningSound()
-                    }
-                    .onDisappear {
-                        isAnimating = false
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.orange)
+                            .cornerRadius(10)
+                            .padding(.top, 5)
+                            .padding(.trailing, 25)
                     }
                 }
                 
@@ -141,6 +142,13 @@ struct LiveMonitoringView: View {
                     tripId: tripDataService.trips.last?.id
                 )
             }
+            
+            if showDashcamSavePopup {
+                DashcamSavePopupView(
+                    isShowingPopup: $showDashcamSavePopup,
+                    tripDataService: tripDataService
+                )
+            }
         }
         .onChange(of: locationService.currentLocation) { newLocation in
             if let location = newLocation {
@@ -174,44 +182,11 @@ struct LiveMonitoringView: View {
             }
             
             // Subscribe to traffic light detections
-            detectionCancellable = cameraService.trafficLightDetectionService.$detectedTrafficLights
+            detectionCancellable = cameraService.trafficLightDetectionService.$detectedObjects
                 .receive(on: RunLoop.main)
                 .sink { detectedObjects in
                     
                     if !detectedObjects.isEmpty {
-                        // Process detected objects for distance estimation
-                        if let location = self.locationService.currentLocation {
-                            // Create mutable copy of detected objects
-                            var objectsWithDistance = detectedObjects
-                            
-                            // Process objects for distance estimation with full screen size
-                            self.distanceEstimationService.processDetectedObjects(
-                                objectsWithDistance,
-                                currentSpeed: location.speed,
-                                timestamp: Date(),
-                                imageSize: CGSize(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-                            )
-                            
-                            // Update detected objects with distance information
-                            for trackedObject in self.distanceEstimationService.trackedObjects {
-                                // Find matching object by comparing bounding boxes
-                                if let matchIndex = objectsWithDistance.firstIndex(where: { object in
-                                    return object.label == trackedObject.detectedObject.label &&
-                                           abs(object.boundingBox.minX - trackedObject.detectedObject.boundingBox.minX) < 0.01 &&
-                                           abs(object.boundingBox.minY - trackedObject.detectedObject.boundingBox.minY) < 0.01
-                                }) {
-                                    // Create a new DetectedObject with distance information
-                                    var updatedObject = objectsWithDistance[matchIndex]
-                                    updatedObject.estimatedDistance = trackedObject.estimatedDistance
-                                    objectsWithDistance[matchIndex] = updatedObject
-                                }
-                            }
-                            
-                            // Update the traffic light detection service with the updated objects
-                            DispatchQueue.main.async {
-                                self.cameraService.trafficLightDetectionService.detectedTrafficLights = objectsWithDistance
-                            }
-                        }
                         
                         // Play different sounds for each object type
                         for object in detectedObjects {
@@ -436,7 +411,7 @@ struct LiveMonitoringView: View {
     // MARK: - Dashcam and Crash Detection
     
     @State private var isDashcamRecording = false
-    @State private var showSaveDashcamAlert = false
+    @State private var showDashcamSavePopup = false
     @State private var crashDetected = false
     
     private func startDashcamRecording() {
@@ -512,14 +487,10 @@ struct LiveMonitoringView: View {
         let summary = locationService.getTripSummary()
         let route = locationService.tripLocations
         
-        // Save dashcam footage if enabled
+        // Show dashcam save popup if enabled
         if UserPreferencesService.shared.isDashcamEnabled {
-            // Ask user if they want to save the dashcam footage
-            showSaveDashcamAlert = true
-            
-            // In a real app, we would show a dialog to the user
-            // For this example, we'll automatically save it
-            _ = tripDataService.saveDashcamFootage()
+            // Show the dashcam save popup
+            showDashcamSavePopup = true
         }
         
         // Update trip with collected data before ending

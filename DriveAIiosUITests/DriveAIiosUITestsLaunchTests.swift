@@ -1,13 +1,13 @@
 //
-//  DriveAIiosUITestsLaunchTests.swift
-//  DriveAIiosUITests
+//  CruiseAIiosUITestsLaunchTests.swift
+//  CruiseAIiosUITests
 //
 //  Created by Ojas Kandhare on 3/28/25.
 //
 
 import XCTest
 
-final class DriveAIiosUITestsLaunchTests: XCTestCase {
+final class CruiseAIiosUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true

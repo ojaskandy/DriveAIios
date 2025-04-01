@@ -62,11 +62,25 @@ struct ShareTripPopupView: View {
                                 .foregroundColor(.secondary)
                             Text(String(format: "%.1f mph", tripSummary.maxSpeed * 2.237))
                                 .font(.headline)
+                                .foregroundColor(.green)
                         }
                         
                         Spacer()
                         
                         VStack(alignment: .trailing) {
+                            Text("Min Speed")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                            Text(String(format: "%.1f mph", tripSummary.minSpeed * 2.237))
+                                .font(.headline)
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    
+                    Divider()
+                    
+                    HStack {
+                        VStack(alignment: .leading) {
                             Text("Duration")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
@@ -75,6 +89,19 @@ struct ShareTripPopupView: View {
                                     .font(.headline)
                             } else {
                                 Text("--")
+                                    .font(.headline)
+                            }
+                        }
+                        
+                        Spacer()
+                        
+                        // Add time info
+                        if let startTime = tripSummary.startTime {
+                            VStack(alignment: .trailing) {
+                                Text("Time")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                Text(startTime, style: .time)
                                     .font(.headline)
                             }
                         }
@@ -159,6 +186,7 @@ struct ShareTripPopupView: View {
         Distance: \(String(format: "%.1f mi", tripSummary.distance / 1609.34))
         Average Speed: \(String(format: "%.1f mph", tripSummary.averageSpeed * 2.237))
         Max Speed: \(String(format: "%.1f mph", tripSummary.maxSpeed * 2.237))
+        Min Speed: \(String(format: "%.1f mph", tripSummary.minSpeed * 2.237))
         """
         
         // Create activity view controller
@@ -183,6 +211,7 @@ struct ShareTripPopupView_Previews: PreviewProvider {
             distance: 5000,
             averageSpeed: 15,
             maxSpeed: 25,
+            minSpeed: 5,
             startTime: Date().addingTimeInterval(-1800),
             endTime: Date()
         )

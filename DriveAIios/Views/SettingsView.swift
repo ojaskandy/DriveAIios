@@ -17,6 +17,7 @@ struct SettingsView: View {
     @State private var showingColorPicker = false
     @State private var customColor = Color.blue
     @State private var hexColor: String = "#0000FF"
+    @State private var showDebugInfo = false
     
     var body: some View {
         NavigationView {
@@ -33,14 +34,14 @@ struct SettingsView: View {
                         showingColorPicker = true
                     }) {
                         HStack {
-                            Label("Background Color", systemImage: "paintpalette.fill")
+                            Label("Theme Color", systemImage: "paintpalette.fill")
                             Spacer()
-                            if let colorHex = userPreferences.customBackgroundColor {
+                            if let colorHex = userPreferences.themeColor {
                                 Circle()
-                                    .fill(Color(hex: colorHex) ?? .blue)
+                                    .fill(Color(hex: colorHex) ?? .black)
                                     .frame(width: 24, height: 24)
                             } else {
-                                Text("Default")
+                                Text("Default (Black)")
                                     .foregroundColor(.secondary)
                             }
                         }
@@ -50,7 +51,7 @@ struct SettingsView: View {
                             selectedColor: $customColor,
                             hexColor: $hexColor,
                             onSave: { color, hex in
-                                userPreferences.setCustomBackgroundColor(hex)
+                                userPreferences.setThemeColor(hex)
                                 showingColorPicker = false
                             },
                             onCancel: {
@@ -58,6 +59,11 @@ struct SettingsView: View {
                             }
                         )
                     }
+                    
+                    Text("Theme colors create a gradient from top to bottom of the screen")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .padding(.top, 4)
                 }
                 
                 Section(header: Text("Safety Features")) {
@@ -80,6 +86,13 @@ struct SettingsView: View {
                     }
                     .onChange(of: userPreferences.isSafetyModeEnabled) { newValue in
                         userPreferences.setSafetyModeEnabled(newValue)
+                    }
+                    
+                    Toggle(isOn: $userPreferences.isAudioAidsEnabled) {
+                        Label("Audio Aids", systemImage: "speaker.wave.2.fill")
+                    }
+                    .onChange(of: userPreferences.isAudioAidsEnabled) { newValue in
+                        userPreferences.setAudioAidsEnabled(newValue)
                     }
                 }
                 
@@ -121,6 +134,28 @@ struct SettingsView: View {
                         Spacer()
                         Text(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0")
                             .foregroundColor(.secondary)
+                    }
+                    
+                    Button(action: {
+                        showDebugInfo.toggle()
+                    }) {
+                        Label("Debug Info", systemImage: "ladybug.fill")
+                    }
+                }
+                
+                if showDebugInfo {
+                    Section(header: Text("Debug Information")) {
+                        Text("Theme Color: \(userPreferences.themeColor ?? "None")")
+                        Text("Dark Mode: \(userPreferences.isDarkMode ? "On" : "Off")")
+                        Text("Audio Aids: \(userPreferences.isAudioAidsEnabled ? "On" : "Off")")
+                        
+                        Button(action: {
+                            // Reset user preferences to defaults
+                            userPreferences.resetFirstLaunchState()
+                        }) {
+                            Text("Reset All Settings")
+                                .foregroundColor(.red)
+                        }
                     }
                 }
             }

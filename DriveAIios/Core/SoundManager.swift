@@ -75,9 +75,9 @@ class SoundManager {
     
     // Play a sound by name with cooldown
     func playSound(named soundName: String, ignoreCooldown: Bool = false) {
-        // Check if safety mode is enabled
-        if !UserPreferencesService.shared.isSafetyModeEnabled {
-            print("Safety mode disabled, not playing sound: \(soundName)")
+        // Check if safety mode and audio aids are enabled
+        if !UserPreferencesService.shared.isSafetyModeEnabled || !UserPreferencesService.shared.isAudioAidsEnabled {
+            print("Safety mode or audio aids disabled, not playing sound: \(soundName)")
             return
         }
         
@@ -126,18 +126,18 @@ class SoundManager {
     // Play a system sound as fallback
     private func playSystemSound(for soundName: String) {
         // Map sound names to system sound IDs
-        // Using more melodic and pleasant system sounds
+        // Using more soothing and pleasant system sounds
         let systemSoundID: SystemSoundID
         
         switch soundName {
         case "traffic_light":
-            systemSoundID = 1396 // Melodic ascending tone
+            systemSoundID = 1306 // Soft, gentle bell sound
         case "stop_sign":
-            systemSoundID = 1394 // Gentle but attention-getting tone
+            systemSoundID = 1304 // Calm, subtle notification
         case "person":
-            systemSoundID = 1375 // Warm, human-like tone
+            systemSoundID = 1301 // Warm, friendly tone
         case "parking_meter":
-            systemSoundID = 1366 // Light, delicate tone
+            systemSoundID = 1300 // Light, delicate tone
         default:
             systemSoundID = 1000 // Default system sound
         }

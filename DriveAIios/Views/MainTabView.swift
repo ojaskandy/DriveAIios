@@ -12,13 +12,13 @@ struct MainTabView: View {
     @StateObject private var locationService = LocationService()
     @StateObject private var cameraService = CameraService()
     @StateObject private var tripDataService = TripDataService()
-    @StateObject private var distanceEstimationService = DistanceEstimationService()
+    @StateObject private var userPreferences = UserPreferencesService.shared
     @State private var selectedTab = 0
     
-    // Custom colors
-    private let accentColor = Color(.systemBlue)
-    private let backgroundColor = Color(.systemBackground)
-    private let tabBarColor = Color(.systemGray6)
+    // Get theme color from user preferences
+    private var themeColor: Color {
+        Color(hex: userPreferences.themeColor ?? "#000000") ?? .black
+    }
     
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -41,8 +41,7 @@ struct MainTabView: View {
                 
                 FSDVisualizationView(
                     locationService: locationService,
-                    cameraService: cameraService,
-                    distanceEstimationService: distanceEstimationService
+                    cameraService: cameraService
                 )
                 .tag(2)
                 
@@ -55,6 +54,7 @@ struct MainTabView: View {
                 )
                 .tag(4)
             }
+            .background(Color(.systemBackground)) // Add background color
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
             
             // Custom Tab Bar
@@ -67,11 +67,6 @@ struct MainTabView: View {
             
             // Then request location permissions
             locationService.requestLocationPermission()
-            
-            // Calibrate the distance estimation service when a camera device is available
-            if let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) {
-                distanceEstimationService.calibrateCamera(with: device, imageSize: CGSize(width: 1920, height: 1080))
-            }
         }
     }
 }
@@ -79,11 +74,16 @@ struct MainTabView: View {
 struct CustomTabBar: View {
     @Binding var selectedTab: Int
     @Namespace private var namespace
+    @ObservedObject private var userPreferences = UserPreferencesService.shared
+    
+    private var themeColor: Color {
+        Color(hex: userPreferences.themeColor ?? "#000000") ?? .black
+    }
     
     private let tabs = [
         TabItem(icon: "house.fill", title: "Home", tag: 0),
         TabItem(icon: "video.fill", title: "Monitor", tag: 1),
-        TabItem(icon: "car.fill", title: "FSD", tag: 2),
+        TabItem(icon: "map.fill", title: "Map", tag: 2),
         TabItem(icon: "clock.fill", title: "History", tag: 3),
         TabItem(icon: "gear", title: "Settings", tag: 4)
     ]
@@ -108,31 +108,48 @@ struct CustomTabBar: View {
         .padding(.vertical, 12)
         .padding(.horizontal, 8)
         .background(
-            Color(.systemBackground)
-                .opacity(0.95)
-                .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: -4)
+            ZStack {
+                Color(.systemBackground)
+                    .opacity(0.95)
+                
+                // Add a subtle gradient of the theme color at the top
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        themeColor.opacity(0.1),
+                        Color.clear
+                    ]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            }
+            .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: -4)
         )
     }
 }
 
 struct TabButton: View {
+    @ObservedObject private var userPreferences = UserPreferencesService.shared
     let icon: String
     let title: String
     let isSelected: Bool
     let namespace: Namespace.ID
     let action: () -> Void
     
+    private var themeColor: Color {
+        Color(hex: userPreferences.themeColor ?? "#000000") ?? .black
+    }
+    
     var body: some View {
         Button(action: action) {
             VStack(spacing: 4) {
                 Image(systemName: icon)
                     .font(.system(size: isSelected ? 24 : 20))
-                    .foregroundColor(isSelected ? .blue : .gray)
+                    .foregroundColor(isSelected ? themeColor : .gray)
                     .frame(height: 24)
                 
                 Text(title)
                     .font(.system(size: 11))
-                    .foregroundColor(isSelected ? .blue : .gray)
+                    .foregroundColor(isSelected ? themeColor : .gray)
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
@@ -140,7 +157,7 @@ struct TabButton: View {
                 ZStack {
                     if isSelected {
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.blue.opacity(0.1))
+                            .fill(themeColor.opacity(0.1))
                             .matchedGeometryEffect(id: "TabBackground", in: namespace)
                     }
                 }

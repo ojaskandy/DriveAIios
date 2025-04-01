@@ -3,8 +3,12 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 70;
 	objects = {
+
+/* Begin PBXBuildFile section */
+		9CC1E4CC2D9727A4002D0597 /* YOLOv3TinyFP16.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = 9CC1E4CB2D9727A4002D0597 /* YOLOv3TinyFP16.mlmodel */; };
+/* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		9CC1E41F2D96F92C002D0597 /* PBXContainerItemProxy */ = {
@@ -27,10 +31,14 @@
 		9CC1E40E2D96F92C002D0597 /* DriveAIios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DriveAIios.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9CC1E41E2D96F92C002D0597 /* DriveAIiosTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DriveAIiosTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		9CC1E4282D96F92C002D0597 /* DriveAIiosUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DriveAIiosUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9CC1E4CB2D9727A4002D0597 /* YOLOv3TinyFP16.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = YOLOv3TinyFP16.mlmodel; sourceTree = "<group>"; };
+		9CC1E4CC2D9727A5002D0597 /* traffic_light_chime.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = traffic_light_chime.wav; sourceTree = "<group>"; };
+		9CC1E4CD2D9727A6002D0597 /* stop_sign_alert.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = stop_sign_alert.wav; sourceTree = "<group>"; };
+		9CC1E4CE2D9727A7002D0597 /* pedestrian_warning.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = pedestrian_warning.wav; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		9CC1E4C62D9700C3002D0597 /* Exceptions for "DriveAIios" folder in "DriveAIios" target */ = {
+		9CC1E4C62D9700C3002D0597 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -40,24 +48,9 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		9CC1E4102D96F92C002D0597 /* DriveAIios */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				9CC1E4C62D9700C3002D0597 /* Exceptions for "DriveAIios" folder in "DriveAIios" target */,
-			);
-			path = DriveAIios;
-			sourceTree = "<group>";
-		};
-		9CC1E4212D96F92C002D0597 /* DriveAIiosTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = DriveAIiosTests;
-			sourceTree = "<group>";
-		};
-		9CC1E42B2D96F92C002D0597 /* DriveAIiosUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = DriveAIiosUITests;
-			sourceTree = "<group>";
-		};
+		9CC1E4102D96F92C002D0597 /* DriveAIios */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (9CC1E4C62D9700C3002D0597 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = DriveAIios; sourceTree = "<group>"; };
+		9CC1E4212D96F92C002D0597 /* DriveAIiosTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = DriveAIiosTests; sourceTree = "<group>"; };
+		9CC1E42B2D96F92C002D0597 /* DriveAIiosUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = DriveAIiosUITests; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -92,6 +85,10 @@
 				9CC1E4212D96F92C002D0597 /* DriveAIiosTests */,
 				9CC1E42B2D96F92C002D0597 /* DriveAIiosUITests */,
 				9CC1E40F2D96F92C002D0597 /* Products */,
+				9CC1E4CB2D9727A4002D0597 /* YOLOv3TinyFP16.mlmodel */,
+				9CC1E4CC2D9727A5002D0597 /* traffic_light_chime.wav */,
+				9CC1E4CD2D9727A6002D0597 /* stop_sign_alert.wav */,
+				9CC1E4CE2D9727A7002D0597 /* pedestrian_warning.wav */,
 			);
 			sourceTree = "<group>";
 		};
@@ -183,23 +180,17 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1620;
-				LastUpgradeCheck = 1620;
+				LastSwiftUpdateCheck = 1520;
+				LastUpgradeCheck = 1520;
+				ORGANIZATIONNAME = "";
 				TargetAttributes = {
 					9CC1E40D2D96F92C002D0597 = {
-						CreatedOnToolsVersion = 16.2;
-					};
-					9CC1E41D2D96F92C002D0597 = {
-						CreatedOnToolsVersion = 16.2;
-						TestTargetID = 9CC1E40D2D96F92C002D0597;
-					};
-					9CC1E4272D96F92C002D0597 = {
-						CreatedOnToolsVersion = 16.2;
-						TestTargetID = 9CC1E40D2D96F92C002D0597;
+						CreatedOnToolsVersion = 15.2;
 					};
 				};
 			};
 			buildConfigurationList = 9CC1E4092D96F92C002D0597 /* Build configuration list for PBXProject "DriveAIios" */;
+			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -208,7 +199,6 @@
 			);
 			mainGroup = 9CC1E4052D96F92C002D0597;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			productRefGroup = 9CC1E40F2D96F92C002D0597 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -249,6 +239,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9CC1E4CC2D9727A4002D0597 /* YOLOv3TinyFP16.mlmodel in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -334,7 +325,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -342,6 +335,8 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -391,7 +386,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -418,6 +413,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -468,7 +464,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ojas.DriveAIiosTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -486,7 +482,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.ojas.DriveAIiosTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";

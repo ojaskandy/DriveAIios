@@ -15,6 +15,7 @@ struct Trip: Identifiable, Codable {
     let distance: Double
     let averageSpeed: Double
     let maxSpeed: Double
+    let minSpeed: Double
     let route: [LocationPoint]
     let safetyScore: Int
     let incidents: [Incident]
@@ -33,6 +34,7 @@ struct Trip: Identifiable, Codable {
          distance: Double,
          averageSpeed: Double,
          maxSpeed: Double,
+         minSpeed: Double = 0,
          route: [LocationPoint],
          safetyScore: Int,
          incidents: [Incident],
@@ -46,6 +48,7 @@ struct Trip: Identifiable, Codable {
         self.distance = distance
         self.averageSpeed = averageSpeed
         self.maxSpeed = maxSpeed
+        self.minSpeed = minSpeed
         self.route = route
         self.safetyScore = safetyScore
         self.incidents = incidents
@@ -103,6 +106,7 @@ struct TripSummary: Codable {
     let distance: Double
     let averageSpeed: Double
     let maxSpeed: Double
+    let minSpeed: Double
     let startTime: Date?
     let endTime: Date?
 }

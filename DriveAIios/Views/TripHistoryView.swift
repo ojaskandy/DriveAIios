@@ -14,20 +14,79 @@ struct TripHistoryView: View {
     @ObservedObject var tripDataService: TripDataService
     @State private var selectedTripId: UUID?
     @State private var showTripDetails = false
+    @State private var showDebugInfo = false
     
     var body: some View {
         NavigationView {
-            List(tripDataService.trips) { trip in
-                NavigationLink(
-                    destination: TripDetailView(trip: trip),
-                    tag: trip.id,
-                    selection: $selectedTripId
-                ) {
-                    TripRowView(trip: trip)
+            VStack {
+                if tripDataService.trips.isEmpty {
+                    // Empty state
+                    VStack(spacing: 20) {
+                        Image(systemName: "car.fill")
+                            .font(.system(size: 60))
+                            .foregroundColor(.gray)
+                        
+                        Text("No Trip History")
+                            .font(.title2)
+                            .fontWeight(.bold)
+                        
+                        Text("Your completed trips will appear here")
+                            .foregroundColor(.secondary)
+                        
+                        // Debug button
+                        Button(action: {
+                            showDebugInfo.toggle()
+                        }) {
+                            Label("Debug Info", systemImage: "ladybug.fill")
+                                .padding()
+                                .background(Color.gray.opacity(0.1))
+                                .cornerRadius(10)
+                        }
+                        .padding(.top, 20)
+                        
+                        if showDebugInfo {
+                            VStack(alignment: .leading, spacing: 10) {
+                                Text("Debug Information:")
+                                    .font(.headline)
+                                
+                                Text("Trip Count: \(tripDataService.trips.count)")
+                                Text("TripDataService initialized: \(tripDataService.isInitialized ? "Yes" : "No")")
+                                
+                                Button(action: {
+                                    // Add a sample trip for testing
+                                    addSampleTrip()
+                                }) {
+                                    Text("Add Sample Trip")
+                                        .foregroundColor(.blue)
+                                        .padding()
+                                        .background(Color.blue.opacity(0.1))
+                                        .cornerRadius(8)
+                                }
+                            }
+                            .padding()
+                            .background(Color.gray.opacity(0.1))
+                            .cornerRadius(10)
+                        }
+                    }
+                    .padding()
+                } else {
+                    // Trip list
+                    List {
+                        ForEach(tripDataService.trips) { trip in
+                            NavigationLink(
+                                destination: TripDetailView(trip: trip),
+                                tag: trip.id,
+                                selection: $selectedTripId
+                            ) {
+                                TripRowView(trip: trip)
+                            }
+                        }
+                    }
+                    .listStyle(InsetGroupedListStyle())
                 }
             }
             .navigationTitle("Trip History")
-            .listStyle(InsetGroupedListStyle())
+            .background(Color(.systemBackground))
             .withHelpButton()
             .onAppear {
                 // Listen for notifications to show trip details
@@ -44,6 +103,51 @@ struct TripHistoryView: View {
                 }
             }
         }
+    }
+    
+    // Helper function to create a LocationPoint
+    private func createLocationPoint(latitude: Double, longitude: Double, timestamp: Date, speed: Double = 10.0) -> LocationPoint {
+        let coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        let location = CLLocation(
+            coordinate: coordinate,
+            altitude: 0,
+            horizontalAccuracy: 10,
+            verticalAccuracy: 10,
+            course: 0,
+            speed: speed,
+            timestamp: timestamp
+        )
+        return LocationPoint(location: location)
+    }
+    
+    // Add a sample trip for testing
+    private func addSampleTrip() {
+        let trip = Trip(
+            id: UUID(),
+            startTime: Date().addingTimeInterval(-3600), // 1 hour ago
+            endTime: Date(),
+            distance: 10000, // 10 km
+            averageSpeed: 10, // 10 m/s (about 22 mph)
+            maxSpeed: 15,
+            minSpeed: 5,
+            route: [
+                createLocationPoint(latitude: 37.7749, longitude: -122.4194, timestamp: Date().addingTimeInterval(-3600)),
+                createLocationPoint(latitude: 37.7750, longitude: -122.4195, timestamp: Date().addingTimeInterval(-3000)),
+                createLocationPoint(latitude: 37.7751, longitude: -122.4196, timestamp: Date().addingTimeInterval(-2400)),
+                createLocationPoint(latitude: 37.7752, longitude: -122.4197, timestamp: Date().addingTimeInterval(-1800)),
+                createLocationPoint(latitude: 37.7753, longitude: -122.4198, timestamp: Date().addingTimeInterval(-1200)),
+                createLocationPoint(latitude: 37.7754, longitude: -122.4199, timestamp: Date().addingTimeInterval(-600)),
+                createLocationPoint(latitude: 37.7755, longitude: -122.4200, timestamp: Date())
+            ],
+            safetyScore: 95,
+            incidents: [],
+            dashcamFootagePath: "/path/to/dashcam/footage.mp4",
+            hasCrashDetected: false,
+            crashTimestamp: nil,
+            crashFootagePath: nil
+        )
+        
+        tripDataService.trips.append(trip)
     }
 }
 
@@ -65,14 +169,38 @@ struct TripRowView: View {
                     String(format: "%.1f mph", trip.averageSpeed * 2.237),
                     systemImage: "speedometer"
                 )
+                .font(.caption)
+                
                 Spacer()
+                
+                // Add min/max speed
+                VStack(alignment: .center, spacing: 2) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.up")
+                            .font(.system(size: 8))
+                            .foregroundColor(.green)
+                        Text(String(format: "%.0f", trip.maxSpeed * 2.237))
+                            .font(.system(size: 10))
+                    }
+                    
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.down")
+                            .font(.system(size: 8))
+                            .foregroundColor(.blue)
+                        Text(String(format: "%.0f", trip.minSpeed * 2.237))
+                            .font(.system(size: 10))
+                    }
+                }
+                
+                Spacer()
+                
                 Label(
                     "Score: \(trip.safetyScore)",
                     systemImage: "checkmark.shield"
                 )
                 .foregroundColor(safetyScoreColor)
+                .font(.caption)
             }
-            .font(.caption)
             
             // Show indicators for dashcam footage and crash detection
             if trip.dashcamFootagePath != nil || trip.hasCrashDetected {
@@ -221,6 +349,14 @@ struct TripDetailView: View {
     @State private var isPlayingDashcam = false
     @State private var isPlayingCrashFootage = false
     
+    private var safetyScoreColor: Color {
+        switch trip.safetyScore {
+        case 90...100: return .green
+        case 70..<90: return .yellow
+        default: return .red
+        }
+    }
+    
     init(trip: Trip) {
         self.trip = trip
         let firstLocation = trip.route.first
@@ -313,6 +449,7 @@ struct TripDetailView: View {
         Distance: \(String(format: "%.1f miles", trip.distance / 1609.34))
         Average Speed: \(String(format: "%.1f mph", trip.averageSpeed * 2.237))
         Max Speed: \(String(format: "%.1f mph", trip.maxSpeed * 2.237))
+        Min Speed: \(String(format: "%.1f mph", trip.minSpeed * 2.237))
         Safety Score: \(trip.safetyScore)/100
         Incidents: \(trip.incidents.count)
         
@@ -333,64 +470,148 @@ struct TripDetailView: View {
     }
     
     private var tripStatistics: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 16) {
             Text("Trip Statistics")
                 .font(.title2)
                 .fontWeight(.bold)
             
-            // Trip time information
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Image(systemName: "clock")
-                        Text("Start: \(trip.startTime.formatted(date: .omitted, time: .shortened))")
-                    }
-                    HStack {
-                        Image(systemName: "clock.fill")
-                        Text("End: \(trip.endTime.formatted(date: .omitted, time: .shortened))")
-                    }
-                }
-                
-                Spacer()
-                
-                // Trip duration
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text("Duration")
+            // Trip time information in a more prominent card
+            VStack(spacing: 12) {
+                HStack {
+                    Text("Trip Timing")
                         .font(.headline)
+                        .foregroundColor(.primary)
+                    Spacer()
+                }
+                
+                HStack {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: "calendar.badge.clock")
+                                .foregroundColor(.blue)
+                            Text("Date: \(trip.startTime.formatted(date: .abbreviated, time: .omitted))")
+                                .font(.subheadline)
+                        }
+                        
+                        HStack {
+                            Image(systemName: "clock")
+                                .foregroundColor(.green)
+                            Text("Start: \(trip.startTime.formatted(date: .omitted, time: .shortened))")
+                                .font(.subheadline)
+                        }
+                        
+                        HStack {
+                            Image(systemName: "clock.fill")
+                                .foregroundColor(.red)
+                            Text("End: \(trip.endTime.formatted(date: .omitted, time: .shortened))")
+                                .font(.subheadline)
+                        }
+                    }
                     
-                    let duration = trip.endTime.timeIntervalSince(trip.startTime)
-                    let hours = Int(duration) / 3600
-                    let minutes = (Int(duration) % 3600) / 60
-                    Text("\(hours)h \(minutes)m")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                    Spacer()
+                    
+                    // Trip duration
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text("Duration")
+                            .font(.headline)
+                        
+                        let duration = trip.endTime.timeIntervalSince(trip.startTime)
+                        let hours = Int(duration) / 3600
+                        let minutes = (Int(duration) % 3600) / 60
+                        Text("\(hours)h \(minutes)m")
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.primary)
+                    }
                 }
             }
-            .padding(.vertical, 8)
-            .padding(.horizontal, 12)
+            .padding()
             .background(Color(.systemGray6))
-            .cornerRadius(8)
+            .cornerRadius(12)
             
-            // Main statistics
-            HStack(spacing: 20) {
-                StatisticView(
-                    title: "Distance",
-                    value: String(format: "%.1f mi", trip.distance / 1609.34),
-                    icon: "map"
-                )
-                
-                StatisticView(
-                    title: "Avg Speed",
-                    value: String(format: "%.1f mph", trip.averageSpeed * 2.237),
-                    icon: "speedometer"
-                )
-                
-                StatisticView(
-                    title: "Safety",
-                    value: "\(trip.safetyScore)",
-                    icon: "checkmark.shield"
-                )
+            // Distance card
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: "map")
+                        .foregroundColor(.purple)
+                    Text("Distance")
+                        .font(.headline)
+                    Spacer()
+                    Text(String(format: "%.1f mi", trip.distance / 1609.34))
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                }
             }
+            .padding()
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
+            
+            // Speed statistics in a card
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Image(systemName: "speedometer")
+                        .foregroundColor(.orange)
+                    Text("Speed Data")
+                        .font(.headline)
+                    Spacer()
+                }
+                
+                HStack(spacing: 20) {
+                    VStack(alignment: .leading) {
+                        Text("Average")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Text(String(format: "%.1f mph", trip.averageSpeed * 2.237))
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .leading) {
+                        Text("Maximum")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Text(String(format: "%.1f mph", trip.maxSpeed * 2.237))
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.green)
+                    }
+                    
+                    Spacer()
+                    
+                    VStack(alignment: .leading) {
+                        Text("Minimum")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Text(String(format: "%.1f mph", trip.minSpeed * 2.237))
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.blue)
+                    }
+                }
+            }
+            .padding()
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
+            
+            // Safety score card
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Image(systemName: "checkmark.shield")
+                        .foregroundColor(safetyScoreColor)
+                    Text("Safety Score")
+                        .font(.headline)
+                    Spacer()
+                    Text("\(trip.safetyScore)")
+                        .font(.title3)
+                        .fontWeight(.semibold)
+                        .foregroundColor(safetyScoreColor)
+                }
+            }
+            .padding()
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
         }
     }
     

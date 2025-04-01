@@ -172,36 +172,18 @@ class CameraService: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
             try device.lockForConfiguration()
             
             // Set frame rate range optimal for processing
-            // Lower frame rate for better stability
-            device.activeVideoMinFrameDuration = CMTime(value: 1, timescale: 30)
-            device.activeVideoMaxFrameDuration = CMTime(value: 1, timescale: 30)
+            // Higher frame rate for smoother camera feed
+            device.activeVideoMinFrameDuration = CMTime(value: 1, timescale: 60)
+            device.activeVideoMaxFrameDuration = CMTime(value: 1, timescale: 60)
             
-            // Set focus mode to locked focus for stability
-            if device.isFocusModeSupported(.locked) {
-                device.focusMode = .locked
-                
-                // Focus at the center of the frame
-                let centerPoint = CGPoint(x: 0.5, y: 0.5)
-                if device.isFocusPointOfInterestSupported {
-                    device.focusPointOfInterest = centerPoint
-                }
+            // Set focus mode to continuous auto focus
+            if device.isFocusModeSupported(.continuousAutoFocus) {
+                device.focusMode = .continuousAutoFocus
             }
             
-            // Set exposure mode to locked for stability
-            if device.isExposureModeSupported(.locked) {
-                device.exposureMode = .locked
-                
-                // Set exposure at the center of the frame
-                let centerPoint = CGPoint(x: 0.5, y: 0.5)
-                if device.isExposurePointOfInterestSupported {
-                    device.exposurePointOfInterest = centerPoint
-                }
-            }
-            
-            // Enable video stabilization
-            if let connection = self.videoDataOutput.connection(with: .video),
-               connection.isVideoStabilizationSupported {
-                connection.preferredVideoStabilizationMode = .cinematic
+            // Set exposure mode to continuous auto exposure
+            if device.isExposureModeSupported(.continuousAutoExposure) {
+                device.exposureMode = .continuousAutoExposure
             }
             
             device.unlockForConfiguration()
@@ -287,8 +269,14 @@ class CameraService: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleB
         guard currentTime.timeIntervalSince(lastProcessingTime) >= processingInterval else { return }
         lastProcessingTime = currentTime
         
+        // Extract CVPixelBuffer from CMSampleBuffer
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
+            print("❌ Failed to get pixel buffer from sample buffer")
+            return
+        }
+        
         // Process the frame for traffic light detection
-        trafficLightDetectionService.processFrame(sampleBuffer)
+        trafficLightDetectionService.processFrame(pixelBuffer)
     }
     
     func captureOutput(_ output: AVCaptureOutput, didDrop sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {

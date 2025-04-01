@@ -183,29 +183,15 @@ struct ObjectDetectionBox: View {
                 .stroke(boxColor, lineWidth: 2)
                 .frame(width: rect.width, height: rect.height)
             
-            // Label background
-            VStack(alignment: .leading, spacing: 4) {
-                // Object type and confidence
-                Text("\(object.detectedObject.label) (\(Int(object.detectedObject.confidence * 100))%)")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.white)
-                
-                // Distance and speed
-                if let speed = object.estimatedApproachSpeed {
-                    Text(String(format: "%.1f m • %.1f m/s", distance, speed))
-                        .font(.system(size: 12, weight: .regular))
-                        .foregroundColor(.white.opacity(0.8))
-                } else {
-                    Text(String(format: "%.1f m", distance))
-                        .font(.system(size: 12, weight: .regular))
-                        .foregroundColor(.white.opacity(0.8))
-                }
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(boxColor.opacity(0.75))
-            .cornerRadius(4)
-            .offset(y: -30)
+            // Minimal label
+            Text("\(object.detectedObject.label) \(Int(object.detectedObject.confidence * 100))%")
+                .font(.system(size: 10, weight: .medium))
+                .foregroundColor(.white)
+                .padding(.horizontal, 4)
+                .padding(.vertical, 2)
+                .background(boxColor.opacity(0.75))
+                .cornerRadius(2)
+                .offset(y: -16)
         }
         .position(
             x: rect.midX,
@@ -218,19 +204,42 @@ struct CameraPreview: UIViewRepresentable {
     let session: AVCaptureSession
     
     func makeUIView(context: Context) -> UIView {
-        let view = UIView(frame: UIScreen.main.bounds)
+        let view = UIView(frame: .zero)
+        view.backgroundColor = .black
         
         let previewLayer = AVCaptureVideoPreviewLayer(session: session)
-        previewLayer.frame = view.frame
+        previewLayer.frame = view.bounds
         previewLayer.videoGravity = .resizeAspectFill
+        previewLayer.contentsGravity = .resizeAspectFill
         view.layer.addSublayer(previewLayer)
+        
+        // Add constraints to ensure proper sizing
+        view.translatesAutoresizingMaskIntoConstraints = false
         
         return view
     }
     
     func updateUIView(_ uiView: UIView, context: Context) {
         if let previewLayer = uiView.layer.sublayers?.first as? AVCaptureVideoPreviewLayer {
-            previewLayer.frame = uiView.frame
+            previewLayer.frame = uiView.bounds
+            
+            // Update video orientation based on device orientation
+            if let connection = previewLayer.connection {
+                let orientation = UIDevice.current.orientation
+                let videoOrientation: AVCaptureVideoOrientation
+                
+                switch orientation {
+                case .portrait: videoOrientation = .portrait
+                case .landscapeLeft: videoOrientation = .landscapeRight
+                case .landscapeRight: videoOrientation = .landscapeLeft
+                case .portraitUpsideDown: videoOrientation = .portraitUpsideDown
+                default: videoOrientation = .portrait
+                }
+                
+                if connection.isVideoOrientationSupported {
+                    connection.videoOrientation = videoOrientation
+                }
+            }
         }
     }
 }

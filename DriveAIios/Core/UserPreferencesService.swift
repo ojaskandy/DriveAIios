@@ -21,6 +21,8 @@ class UserPreferencesService: ObservableObject {
     @Published var customBackgroundColor: String?
     @Published var isDashcamEnabled: Bool
     @Published var isCrashDetectionEnabled: Bool
+    @Published var isAudioAidsEnabled: Bool
+    @Published var themeColor: String?
     
     // UserDefaults keys
     private enum Keys {
@@ -35,6 +37,8 @@ class UserPreferencesService: ObservableObject {
         static let customBackgroundColor = "customBackgroundColor"
         static let isDashcamEnabled = "isDashcamEnabled"
         static let isCrashDetectionEnabled = "isCrashDetectionEnabled"
+        static let isAudioAidsEnabled = "isAudioAidsEnabled"
+        static let themeColor = "themeColor"
     }
     
     // Singleton instance
@@ -71,6 +75,7 @@ class UserPreferencesService: ObservableObject {
         isDarkMode = defaults.object(forKey: Keys.isDarkMode) == nil ?
             true : defaults.bool(forKey: Keys.isDarkMode)
         customBackgroundColor = defaults.string(forKey: Keys.customBackgroundColor)
+        themeColor = defaults.string(forKey: Keys.themeColor) ?? "#000000" // Default to black
         
         // Safety features
         // Default dashcam to enabled
@@ -79,6 +84,9 @@ class UserPreferencesService: ObservableObject {
         // Default crash detection to enabled
         isCrashDetectionEnabled = defaults.object(forKey: Keys.isCrashDetectionEnabled) == nil ?
             true : defaults.bool(forKey: Keys.isCrashDetectionEnabled)
+        // Default audio aids to enabled
+        isAudioAidsEnabled = defaults.object(forKey: Keys.isAudioAidsEnabled) == nil ?
+            true : defaults.bool(forKey: Keys.isAudioAidsEnabled)
     }
     
     // MARK: - Public Methods
@@ -133,6 +141,16 @@ class UserPreferencesService: ObservableObject {
         UserDefaults.standard.set(enabled, forKey: Keys.isCrashDetectionEnabled)
     }
     
+    func setAudioAidsEnabled(_ enabled: Bool) {
+        isAudioAidsEnabled = enabled
+        UserDefaults.standard.set(enabled, forKey: Keys.isAudioAidsEnabled)
+    }
+    
+    func setThemeColor(_ hexColor: String) {
+        themeColor = hexColor
+        UserDefaults.standard.set(hexColor, forKey: Keys.themeColor)
+    }
+    
     func resetFirstLaunchState() {
         // For testing purposes - reset the first launch state
         isFirstLaunch = true
@@ -144,6 +162,8 @@ class UserPreferencesService: ObservableObject {
         customBackgroundColor = nil
         isDashcamEnabled = true
         isCrashDetectionEnabled = true
+        isAudioAidsEnabled = true
+        themeColor = "#000000" // Default to black
         
         let defaults = UserDefaults.standard
         defaults.set(true, forKey: Keys.isFirstLaunch)
@@ -155,5 +175,7 @@ class UserPreferencesService: ObservableObject {
         defaults.removeObject(forKey: Keys.customBackgroundColor)
         defaults.set(true, forKey: Keys.isDashcamEnabled)
         defaults.set(true, forKey: Keys.isCrashDetectionEnabled)
+        defaults.set(true, forKey: Keys.isAudioAidsEnabled)
+        defaults.set("#000000", forKey: Keys.themeColor)
     }
 }

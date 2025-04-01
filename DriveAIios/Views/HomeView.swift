@@ -53,11 +53,15 @@ struct HomeView: View {
     }
     
     private var backgroundGradient: some View {
-        LinearGradient(
+        let themeColor = Color(hex: userPreferences.themeColor ?? "#000000") ?? .black
+        
+        return LinearGradient(
             gradient: Gradient(colors: [
-                Color(.systemBackground),
-                Color(.systemBackground).opacity(0.95),
-                Color.blue.opacity(0.1)
+                themeColor,
+                themeColor.opacity(0.8),
+                themeColor.opacity(0.5),
+                themeColor.opacity(0.2),
+                Color(.systemBackground)
             ]),
             startPoint: .top,
             endPoint: .bottom

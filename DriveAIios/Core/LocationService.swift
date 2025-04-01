@@ -84,14 +84,21 @@ class LocationService: NSObject, ObservableObject {
         let distance = calculateTotalDistance()
         let averageSpeed = calculateAverageSpeed()
         let maxSpeed = calculateMaxSpeed()
+        let minSpeed = calculateMinSpeed()
         
         return TripSummary(
             distance: Double(distance),
             averageSpeed: averageSpeed,
             maxSpeed: maxSpeed,
+            minSpeed: minSpeed,
             startTime: tripLocations.first?.timestamp,
             endTime: tripLocations.last?.timestamp
         )
+    }
+    
+    // Convert CLLocation to LocationPoint
+    func locationPoint(from location: CLLocation) -> LocationPoint {
+        return LocationPoint(location: location)
     }
     
     private func calculateTotalDistance() -> CLLocationDistance {
@@ -114,6 +121,15 @@ class LocationService: NSObject, ObservableObject {
     private func calculateMaxSpeed() -> Double {
         guard !tripLocations.isEmpty else { return 0 }
         return tripLocations.compactMap { $0.speed >= 0 ? $0.speed : nil }.max() ?? 0
+    }
+    
+    private func calculateMinSpeed() -> Double {
+        guard !tripLocations.isEmpty else { return 0 }
+        // Filter out negative speeds (which indicate invalid readings) and get non-zero minimum
+        let validSpeeds = tripLocations.compactMap { $0.speed >= 0 ? $0.speed : nil }
+        // Filter out zero speeds when the vehicle is stationary, unless all speeds are zero
+        let movingSpeeds = validSpeeds.filter { $0 > 0.1 } // Consider speeds above 0.1 m/s as moving
+        return movingSpeeds.isEmpty ? 0 : (movingSpeeds.min() ?? 0)
     }
     
     // Check if user is exceeding speed limit

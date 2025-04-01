@@ -1,13 +1,13 @@
 //
-//  DriveAIiosUITests.swift
-//  DriveAIiosUITests
+//  CruiseAIiosUITests.swift
+//  CruiseAIiosUITests
 //
 //  Created by Ojas Kandhare on 3/28/25.
 //
 
 import XCTest
 
-final class DriveAIiosUITests: XCTestCase {
+final class CruiseAIiosUITests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.

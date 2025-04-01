@@ -12,22 +12,39 @@ import Combine
 class TripDataService: ObservableObject {
     @Published var trips: [Trip] = []
     @Published var currentTrip: Trip?
+    @Published var dashcamFrames: [(timestamp: Date, videoURL: URL)] = []
+    @Published var isInitialized: Bool = true
     
+    // Temporary storage for the current trip's data
+    private var startTime: Date?
+    private var endTime: Date?
+    private var distance: Double = 0
+    private var averageSpeed: Double = 0
+    private var maxSpeed: Double = 0
+    private var minSpeed: Double = Double.greatestFiniteMagnitude
+    private var route: [LocationPoint] = []
+    private var incidents: [Incident] = []
+    private var safetyScore: Int = 100
+    private var dashcamFootagePath: String?
+    private var hasCrashDetected: Bool = false
+    private var crashTimestamp: Date?
+    private var crashFootagePath: String?
+    
+    // Dashcam buffer
+    private var dashcamBuffer: [Date: URL] = [:]
+    private let dashcamBufferDuration: TimeInterval = 300 // 5 minutes
+    
+    // Crash detection
+    private var crashDetected: Bool = false
+    private var lastAccelerationValues: [Double] = []
+    
+    // UserDefaults
     private let userDefaults = UserDefaults.standard
-    private let tripsKey = "saved_trips"
+    private let tripsKey = "savedTrips"
     
     init() {
         loadTrips()
     }
-    
-    // Dashcam and crash detection properties
-    private var dashcamBuffer: [Date: URL] = [:] // Store last 5 minutes of footage
-    private var dashcamBufferDuration: TimeInterval = 300 // 5 minutes in seconds
-    private var lastAccelerationValues: [Double] = []
-    private var crashDetected = false
-    private var crashTimestamp: Date?
-    private var crashFootagePath: String?
-    private var dashcamFootagePath: String?
     
     func startNewTrip() {
         // Reset crash detection state
@@ -45,6 +62,7 @@ class TripDataService: ObservableObject {
             distance: 0,
             averageSpeed: 0,
             maxSpeed: 0,
+            minSpeed: 0,
             route: [],
             safetyScore: 100,
             incidents: []
@@ -62,6 +80,7 @@ class TripDataService: ObservableObject {
             distance: summary.distance,
             averageSpeed: summary.averageSpeed,
             maxSpeed: summary.maxSpeed,
+            minSpeed: summary.minSpeed,
             route: route.map { LocationPoint(location: $0) },
             safetyScore: calculateSafetyScore(incidents: incidents),
             incidents: incidents,
@@ -87,6 +106,7 @@ class TripDataService: ObservableObject {
         dashcamBuffer = dashcamBuffer.filter { $0.key > cutoffTime }
     }
     
+    // Save the default 2 minutes of dashcam footage
     func saveDashcamFootage() -> String? {
         guard !dashcamBuffer.isEmpty, let userPreferences = UserPreferencesService.shared as? UserPreferencesService else {
             return nil
@@ -104,6 +124,30 @@ class TripDataService: ObservableObject {
         let filename = "dashcam_\(dateString).mp4"
         
         // In a real app, we would merge the video clips in dashcamBuffer
+        // For this example, we'll just return the filename as if it was saved
+        dashcamFootagePath = filename
+        return filename
+    }
+    
+    // Save extended (5 minutes) dashcam footage
+    func saveExtendedDashcamFootage() -> String? {
+        guard !dashcamBuffer.isEmpty, let userPreferences = UserPreferencesService.shared as? UserPreferencesService else {
+            return nil
+        }
+        
+        // Only save if dashcam is enabled
+        guard userPreferences.isDashcamEnabled else {
+            return nil
+        }
+        
+        // Create a unique filename for the extended footage
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd_HH-mm-ss"
+        let dateString = dateFormatter.string(from: Date())
+        let filename = "dashcam_extended_\(dateString).mp4"
+        
+        // In a real app, we would merge the video clips in dashcamBuffer
+        // using the extended buffer duration (5 minutes)
         // For this example, we'll just return the filename as if it was saved
         dashcamFootagePath = filename
         return filename
@@ -159,6 +203,7 @@ class TripDataService: ObservableObject {
                         distance: trip.distance,
                         averageSpeed: trip.averageSpeed,
                         maxSpeed: trip.maxSpeed,
+                        minSpeed: trip.minSpeed,
                         route: trip.route,
                         safetyScore: calculateSafetyScore(incidents: incidents),
                         incidents: incidents,
